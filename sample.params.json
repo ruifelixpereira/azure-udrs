@@ -1,0 +1,31 @@
+{
+  "auth": {
+    "client_id": "to replace with your value",
+    "client_secret": "to replace with your value",
+    "tenant_id": "to replace with your value"
+  },
+  "subscription_id": "to replace with your value",
+  "firewall_ip": "1.1.1.1",
+  "new_udr": {
+    "resource_group": "rg-test-01",
+    "name": "udrxxx"
+  },
+  "reference_vm_for_routes": {
+    "resource_group": "rg-ref-01",
+    "nic_name": "testvm-nic01"
+  },
+  "vnets": [
+    {
+      "vnet": "vnet-01",
+      "rg": "rg-net-01"
+    },
+    {
+      "vnet": "vnet-02",
+      "rg": "rg-net-02"
+    },
+    {
+      "vnet": "vnet-03",
+      "rg": "rg-net-03"
+    }
+  ]
+}

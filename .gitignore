@@ -1,0 +1,11 @@
+.terraform*
+*.tfplan
+*.tfstate
+
+params.json
+tmp_*.json
+list_routes.json
+
+old
+tests
+MYLOG.md
