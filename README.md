@@ -2,9 +2,7 @@
 
 These Terraform scripts are used to deploy UDRs to force the traffic to go through the Firewall, following this approach:
 
-- [x] Create UDR for each Vnet with
-  - Rules for each on-prem route (these rules are collected from the effective routes of a reference VM)
-  - Rule per each Vnet peering
+- [x] Create UDR for each Vnet with rules for each on-prem route (these rules are collected from the effective routes of a reference VM) and rules for each Vnet peering
 - [ ] Associate each UDR with all the subnets of the context Vnet
 - [ ] Update the Hub Vnet UDR with the rules for each Vnet
 - [ ] If needed, rollback (dissociate UDRs to all Vnet subnets and revert the changes made to the Hub UDR)
