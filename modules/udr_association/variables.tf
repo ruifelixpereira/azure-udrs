@@ -1,7 +1,3 @@
-variable "udr_resource_group" {
-  description = "Resource group name where the UDR will be created"
-}
-
 variable "firewall_ip" {
   description = "Firewall IP address to use in UDR routing rules"
   default = "10.10.10.10"

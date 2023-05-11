@@ -12,9 +12,7 @@ These Terraform scripts are used to deploy UDRs to force the traffic to go throu
 
 **Step 1.** Create a copy of file `sample.params.json` with the name `params.json` and customize it with your own settings:
 - **auth** section: Terraform service principal to use in the deployment.
-- **subscription_id**: Target Azure Subscription id.
 - **firewall_ip**: Firewall IP used in the routes to forward traffic to.
-- **new_udr** section: The resource group and the prefix name of the new UDRs to be created.
 - **reference_vm_for_routes** section: Reference Virtual Machine used to collect the effective routes from on-premises.
 - **vnets** section: List of VNETs for which we want to create UDRs.
 

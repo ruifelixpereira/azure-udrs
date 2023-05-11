@@ -9,13 +9,15 @@ terraform {
   }
 }
 
-# Configure the Azure Provider
+# Configure the Azure Provider with an alias
 provider "azurerm" {
-  features {}
+  alias = "prod"
 
   subscription_id            = var.subscription_id
+  tenant_id                  = var.tenant_id
   client_id                  = var.client_id
   client_secret              = var.client_secret
-  tenant_id                  = var.tenant_id
   skip_provider_registration = true
+
+  features {}
 }

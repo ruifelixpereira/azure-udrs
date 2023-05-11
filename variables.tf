@@ -1,7 +1,3 @@
-variable "udr_resource_group" {
-  description = "Resource group name where the new UDR(s) will be created"
-}
-
 variable "firewall_ip" {
   description = "Firewall IP address to use in UDR routing rules"
   default = "10.10.10.10"
@@ -15,7 +11,6 @@ variable "tags" {
     }
 }
 
-
 variable "client_id" {
   description = "The Client ID for the Service Principal to use"
 }
@@ -25,9 +20,5 @@ variable "client_secret" {
 }
 
 variable "tenant_id" {
-  description = "The Client Secret for the Service Principal to use"
-}
-
-variable "subscription_id" {
   description = "The Client Secret for the Service Principal to use"
 }
