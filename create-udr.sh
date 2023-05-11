@@ -4,7 +4,7 @@
 numberOfSteps=6
 
 ########################################
-# Setup TF variables"
+# Setup TF variables
 echo "STEP (1/${numberOfSteps}) - Setup Terraform variables."
 date
 
@@ -52,6 +52,7 @@ GATEWAY_RULES_JSON=$(cat list_routes.json | jq  -r '.value | map(select(.nextHop
 # Process list of VNETs
 echo "STEP (4/${numberOfSteps}) - Process list of VNETs."
 date
+
 # Flat array of vnets
 FLAT_VNETS_ARRAY=$(jq -r '.vnets[].vnet' $PARAMS_FILE)
 
@@ -70,7 +71,7 @@ do
 
     # Add subscription to file
     SUB_PROVIDER_ALIAS_COUNTER=$((SUB_PROVIDER_ALIAS_COUNTER+1))
-    printf "%s" "$MYSUBSSEP { \"alias\":\"sub$SUB_PROVIDER_ALIAS_COUNTER\", \"rg\":\"$VAR_vnet_subscription_id\"}" >> $SUBSFILE
+    printf "%s" "$MYSUBSSEP {\"alias\":\"sub$SUB_PROVIDER_ALIAS_COUNTER\", \"subscription_id\":\"$VAR_vnet_subscription_id\"}" >> $SUBSFILE
     MYSUBSSEP=","
 
     # Process VNET
@@ -101,6 +102,32 @@ done
 echo "]" >> $PROCFILE
 echo "]" >> $SUBSFILE
 
+########################################
+# Generate new provider.tf
+
+cp provider.tf.template provider.tf
+
+# Flat array of subscriptions
+FLAT_SUBS_ARRAY=$(jq -r '.[].alias' $SUBSFILE)
+
+# For each vnet
+for SUBSC in ${FLAT_SUBS_ARRAY}
+do
+    SUB_ID=$(cat $SUBSFILE | jq --arg alias $SUBSC -r '. | map(select(.alias == $alias)) | .[0].subscription_id')
+
+    {
+        echo 'provider "azurerm" {'
+        echo '  alias = "$SUBSC"'
+        echo '  subscription_id            = $SUB_ID'
+        echo '  tenant_id                  = var.tenant_id'
+        echo '  client_id                  = var.client_id'
+        echo '  client_secret              = var.client_secret'
+        echo '  skip_provider_registration = true'
+        echo '  features {}'
+        echo '}'
+    } >> provider.tf
+
+done
 
 ########################################
 # Terraform steps
