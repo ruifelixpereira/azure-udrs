@@ -8,6 +8,14 @@ variable "list_vnets_json_file" {
   default = "../../tmp_association_subnets.json"
 }
 
+variable "subscriptions" {
+    description = "Map of subscriptions and alias"
+    default = {
+        "alias1" = "sub1"
+        "alias2" = "sub2"
+    }
+}
+
 variable "tags" {
     description = "Tags to apply to every new resource created"
     default     = {

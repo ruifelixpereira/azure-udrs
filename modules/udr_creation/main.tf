@@ -23,16 +23,17 @@ data "azurerm_resource_group" "udr_resource_group" {
 
 # New UDR
 resource "azurerm_route_table" "new-udr" {
-    for_each = local.rules
+    for_each = var.vnets
     #count                         = var.just_associate ? 0 : 1
 
+    provider                      = "azurerm.${each.value.alias}"
     name                          = "udr-${each.key}"
     location                      = data.azurerm_resource_group.udr_resource_group.location
-    resource_group_name           = var.udr_resource_group
+    resource_group_name           = each.value.rg
     disable_bgp_route_propagation = false
 
     dynamic "route" {
-        for_each = each.value
+        for_each = each.value.rules
         content {
             name                   = "route-${route.key}"
             address_prefix         = route.value

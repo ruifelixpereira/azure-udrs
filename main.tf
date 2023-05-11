@@ -5,8 +5,9 @@ module "udr_creation_module" {
   source  = "./modules/udr_creation"
 
   # arguments
-  udr_resource_group = var.udr_resource_group
+  vnets = var.vnets
   firewall_ip = var.firewall_ip
+  location = var.location
   tags = var.tags
 }
 

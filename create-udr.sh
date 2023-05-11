@@ -57,8 +57,8 @@ date
 FLAT_VNETS_ARRAY=$(jq -r '.vnets[].vnet' $PARAMS_FILE)
 
 # Clean file
-PROCFILE="tmp_creation_vnets.json"
-echo "[" > $PROCFILE
+VNETSFILE="vnets.auto.tfvars.json"
+echo "{ "vnets": {" > $VNETSFILE
 MYSEP=""
 
 # For each vnet
@@ -95,11 +95,11 @@ do
     MYSPACES=$(echo ${arrSpaces[@]})
     MYSPACES_JSON=$(echo "[\"$MYSPACES\"]" | jq 'map(. |= split(" ")) | flatten')
     MERGED_JSON=$(jq --argjson arr1 "$MYSPACES_JSON" --argjson arr2 "$GATEWAY_RULES_JSON" -n '$arr1 + $arr2 | unique')
-    printf "%s" "$MYSEP { \"vnet\":\"$VNET\", \"rg\":\"$VAR_vnet_rg\", \"alias\":\"sub$SUB_PROVIDER_ALIAS_COUNTER\", \"rules\":$MERGED_JSON}" >> $PROCFILE
+    printf "%s" "$MYSEP \"$VNET\": {\"rg\":\"$VAR_vnet_rg\", \"alias\":\"sub$SUB_PROVIDER_ALIAS_COUNTER\", \"rules\":$MERGED_JSON}" >> $VNETSFILE
     MYSEP=","
 
 done
-echo "]" >> $PROCFILE
+echo "} }" >> $VNETSFILE
 echo "]" >> $SUBSFILE
 
 ########################################
@@ -114,31 +114,19 @@ FLAT_SUBS_ARRAY=$(jq -r '.[].alias' $SUBSFILE)
 for SUBSC in ${FLAT_SUBS_ARRAY}
 do
     SUB_ID=$(cat $SUBSFILE | jq --arg alias $SUBSC -r '. | map(select(.alias == $alias)) | .[0].subscription_id')
-
-    {
-        echo 'provider "azurerm" {'
-        echo '  alias = "$SUBSC"'
-        echo '  subscription_id            = $SUB_ID'
-        echo '  tenant_id                  = var.tenant_id'
-        echo '  client_id                  = var.client_id'
-        echo '  client_secret              = var.client_secret'
-        echo '  skip_provider_registration = true'
-        echo '  features {}'
-        echo '}'
-    } >> provider.tf
-
+    printf "%b\n" "provider \"azurerm\" {\n  alias = \"$SUBSC\"\n  subscription_id = $SUB_ID\n  tenant_id = var.tenant_id\n  client_id = var.client_id\n  client_secret = var.client_secret\n  skip_provider_registration = true\n  features {}\n}" >> provider.tf
 done
 
 ########################################
 # Terraform steps
 echo "STEP (3/${numberOfSteps}) - Terraform init."
 date
-#terraform init
+terraform init
 
 echo "STEP (5/${numberOfSteps}) - Terraform plan."
 date
-#terraform plan -out main.tfplan
+terraform plan -out main.tfplan
 
 echo "STEP (6/${numberOfSteps}) - Terraform apply."
 date
-#terraform apply main.tfplan
+terraform apply main.tfplan

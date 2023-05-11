@@ -3,6 +3,15 @@ variable "firewall_ip" {
   default = "10.10.10.10"
 }
 
+variable "location" {
+  default = "westeurope"
+}
+
+variable "vnets" {
+    description = "VNETS to consider for UDR creation"
+    type = map
+}
+
 variable "tags" {
     description = "Tags to apply to every new resource created"
     default     = {
