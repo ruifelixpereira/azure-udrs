@@ -1,34 +1,29 @@
 #
-# UDR resources
+# Required provider
 #
 
-
-# List of VNETS to consider
-locals {
-  # can validate with: jq . final_vnets.json
-  vnets = jsondecode(file("${path.module}/${var.list_vnets_json_file}"))
-
-  rules = {
-    for vn in local.vnets : vn.vnet => vn.rules
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+    }
   }
 }
 
-
-# Resource group where we are going to create the new UDR
-
-data "azurerm_resource_group" "udr_resource_group" {
-    name = var.udr_resource_group
-}
-
+#
+# UDR resources
+#
 
 # New UDR
 resource "azurerm_route_table" "new-udr" {
-    for_each = var.vnets
-    #count                         = var.just_associate ? 0 : 1
+    #for_each = var.vnets
+    for_each = {
+        for k, v in var.vnets : k => v
+        if contains(var.subscription_alias, v.alias)
+    }
 
-    provider                      = "azurerm.${each.value.alias}"
     name                          = "udr-${each.key}"
-    location                      = data.azurerm_resource_group.udr_resource_group.location
+    location                      = each.value.location
     resource_group_name           = each.value.rg
     disable_bgp_route_propagation = false
 

@@ -3,18 +3,14 @@ variable "firewall_ip" {
   default = "10.10.10.10"
 }
 
-variable "location" {
-  default = "westeurope"
-}
-
-variable "list_vnets_json_file" {
-  description = "JSON file with VNETS to consider for UDR creation"
-  default = "../../tmp_creation_vnets.json"
-}
-
 variable "vnets" {
-    description = "VNETS to consider for UDR creation"
+    description = "VNETs rules for UDR creation"
     type = map
+}
+
+variable "subscription_alias" {
+    description = "Subscription alias for which to consider VNETs UDR creation"
+    type = set(string)
 }
 
 variable "tags" {

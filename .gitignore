@@ -6,6 +6,7 @@ params.json
 tmp_*.json
 list_routes.json
 
+vnets.auto.tfvars.json
 old
 tests
 MYLOG.md

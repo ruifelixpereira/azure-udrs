@@ -3,10 +3,6 @@ variable "firewall_ip" {
   default = "10.10.10.10"
 }
 
-variable "location" {
-  default = "westeurope"
-}
-
 variable "vnets" {
     description = "VNETS to consider for UDR creation"
     type = map
@@ -20,6 +16,7 @@ variable "tags" {
     }
 }
 
+
 variable "client_id" {
   description = "The Client ID for the Service Principal to use"
 }
@@ -29,5 +26,5 @@ variable "client_secret" {
 }
 
 variable "tenant_id" {
-  description = "The Client Secret for the Service Principal to use"
+  description = "The Azure AD tenant"
 }
