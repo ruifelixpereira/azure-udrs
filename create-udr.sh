@@ -168,7 +168,7 @@ deploy_terraform()
 
     echo "STEP (7/${numberOfSteps}) - Terraform apply."
     date
-    #terraform apply main.tfplan
+    terraform apply main.tfplan
 }
 
 ############################################################

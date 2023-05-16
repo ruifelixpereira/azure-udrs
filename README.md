@@ -16,5 +16,10 @@ These Terraform scripts are used to deploy UDRs to force the traffic to go throu
 - **reference_vm_for_routes** section: Reference Virtual Machine used to collect the effective routes from on-premises.
 - **vnets** section: List of VNETs for which we want to create UDRs.
 
-**Step 2.** Just run the script `create-udr.sh`.
+**Step 2.** Run the script with the option to generate the configuration files first `create-udr.sh -g`. You can validate the generate files namely:
+- **vnets.auto.tfvars.json**: VNET configration ans rules.
+- **tmp_subscriptions.json**: List of subscriptions to consider.
+- **provider.tf**: Terraform script with the providers aliases for each subscription.
+- **main.tf**: Terraform script with a call to module udr_creation for each subscription.
 
+**Step 3.** Run the script with the option to deploy with Terraform `create-udr.sh -d`.
