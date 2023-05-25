@@ -77,6 +77,7 @@ generate_files()
     #az network nic show-effective-route-table -g ${VAR_reference_vm_for_routes_resource_group} -n ${VAR_reference_vm_for_routes_nic_name} --output json
     GATEWAY_RULES_JSON=$(cat list_routes.json | jq  -r '.value | map(select(.nextHopType == "VirtualNetworkGateway")) | .[].addressPrefix[0]' | jq -Rcn '[inputs]')
 
+
     ########################################
     # Process list of VNETs
     echo "STEP (4/${numberOfSteps}) - Process list of VNETs."
@@ -100,11 +101,12 @@ generate_files()
 
         # Add subscription to file
         SUB_PROVIDER_ALIAS_COUNTER=$((SUB_PROVIDER_ALIAS_COUNTER+1))
+
         printf "%s" "$MYSUBSSEP {\"alias\":\"sub$SUB_PROVIDER_ALIAS_COUNTER\", \"subscription_id\":\"$VAR_vnet_subscription_id\"}" >> $SUBSFILE
         MYSUBSSEP=","
 
         # Process VNET
-        arrSpaces=()
+        arrSpaces="[]"
         for row in $(echo $VAR_vnets_to_pair | jq -c '. | map(.) | .[]'); do
             _jq() {
                 echo ${row} | jq -r "${1}"
@@ -116,19 +118,17 @@ generate_files()
             # Get Address space
             az account set -s ${MYVNETSUBS}
             vnetLocation=$(az network vnet show -g ${MYVNETRG} -n ${MYVNET} --query "location" --output tsv)
-            vnetSpaces=$(az network vnet show -g ${MYVNETRG} -n ${MYVNET} --query "addressSpace.addressPrefixes" --output tsv)
+            vnetSpaces=$(az network vnet show -g ${MYVNETRG} -n ${MYVNET} --query "addressSpace.addressPrefixes" --output json)
             if [ $? -ne 0 ]; then
                 echo "Failed to get address space for ${MYVNETRG}/${MYVNET}"
                 exit 1
             fi
-            arrSpaces+=( $vnetSpaces )
+            arrSpaces=$(jq --argjson arr1 "$arrSpaces" --argjson arr2 "$vnetSpaces" -n '$arr1 + $arr2')
         done
-        MYSPACES=$(echo ${arrSpaces[@]})
-        MYSPACES_JSON=$(echo "[\"$MYSPACES\"]" | jq 'map(. |= split(" ")) | flatten')
-        MERGED_JSON=$(jq --argjson arr1 "$MYSPACES_JSON" --argjson arr2 "$GATEWAY_RULES_JSON" -n '$arr1 + $arr2 | unique')
+     
+        MERGED_JSON=$(jq --argjson arr1 "$arrSpaces" --argjson arr2 "$GATEWAY_RULES_JSON" -n '$arr1 + $arr2 | unique')
         printf "%s" "$MYSEP \"$VNET\": {\"rg\":\"$VAR_vnet_rg\", \"location\": \"$vnetLocation\", \"alias\":\"sub$SUB_PROVIDER_ALIAS_COUNTER\", \"rules\":$MERGED_JSON}" >> $VNETSFILE
         MYSEP=","
-
     done
     echo "} }" >> $VNETSFILE
     echo "]" >> $SUBSFILE
