@@ -16,7 +16,7 @@ variable "tags" {
     }
 }
 
-
+/*
 variable "client_id" {
   description = "The Client ID for the Service Principal to use"
 }
@@ -28,3 +28,4 @@ variable "client_secret" {
 variable "tenant_id" {
   description = "The Azure AD tenant"
 }
+*/

@@ -37,9 +37,9 @@ load_variables()
     export PARAMS_FILE="params.json"
 
     # Terraform service principal
-    export TF_VAR_client_id=$(jq -r '.auth.client_id' $PARAMS_FILE)
-    export TF_VAR_client_secret=$(jq -r '.auth.client_secret' $PARAMS_FILE)
-    export TF_VAR_tenant_id=$(jq -r '.auth.tenant_id' $PARAMS_FILE)
+    #export TF_VAR_client_id=$(jq -r '.auth.client_id' $PARAMS_FILE)
+    #export TF_VAR_client_secret=$(jq -r '.auth.client_secret' $PARAMS_FILE)
+    #export TF_VAR_tenant_id=$(jq -r '.auth.tenant_id' $PARAMS_FILE)
 
     # Firewall IP address to use in UDR routing rules
     export TF_VAR_firewall_ip=$(jq -r '.firewall_ip' $PARAMS_FILE)
@@ -59,7 +59,7 @@ generate_files()
     # Login
     echo "STEP (2/${numberOfSteps}) - Login with service principal."
     date
-    az login --service-principal --username $TF_VAR_client_id --password $TF_VAR_client_secret --tenant $TF_VAR_tenant_id
+    #az login --service-principal --username $TF_VAR_client_id --password $TF_VAR_client_secret --tenant $TF_VAR_tenant_id
 
     ########################################
     # Initialize subscriptions file
@@ -146,7 +146,8 @@ generate_files()
     for SUBSC in ${FLAT_SUBS_ARRAY}
     do
         SUB_ID=$(cat $SUBSFILE | jq --arg alias $SUBSC -r '. | map(select(.alias == $alias)) | .[0].subscription_id')
-        printf "%b\n" "provider \"azurerm\" {\n  alias = \"$SUBSC\"\n  subscription_id = \"$SUB_ID\"\n  tenant_id = var.tenant_id\n  client_id = var.client_id\n  client_secret = var.client_secret\n  skip_provider_registration = true\n  features {}\n}" >> provider.tf
+        #printf "%b\n" "provider \"azurerm\" {\n  alias = \"$SUBSC\"\n  subscription_id = \"$SUB_ID\"\n  tenant_id = var.tenant_id\n  client_id = var.client_id\n  client_secret = var.client_secret\n  skip_provider_registration = true\n  features {}\n}" >> provider.tf
+        printf "%b\n" "provider \"azurerm\" {\n  alias = \"$SUBSC\"\n  subscription_id = \"$SUB_ID\"\n  skip_provider_registration = true\n  features {}\n}" >> provider.tf
         printf "%b\n" "module \"udr_creation_module_$SUBSC\" {\n  source = \"./modules/udr_creation\"\n  providers = {\n    azurerm = azurerm.$SUBSC\n  }\n  vnets = var.vnets\n  firewall_ip = var.firewall_ip\n  subscription_alias = [\"$SUBSC\"]\n  tags = var.tags\n}" >> main.tf
     done
 }

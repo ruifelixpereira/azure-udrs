@@ -1,9 +1,4 @@
 {
-  "auth": {
-    "client_id": "to replace with your value",
-    "client_secret": "to replace with your value",
-    "tenant_id": "to replace with your value"
-  },
   "firewall_ip": "1.1.1.1",
   "reference_vm_for_routes": {
     "subscription_id": "to replace with your value",
