@@ -10,16 +10,17 @@ These Terraform scripts are used to deploy UDRs to force the traffic to go throu
 
 ## How to run it
 
-**Step 1.** Create a copy of file `sample.params.json` with the name `params.json` and customize it with your own settings:
-- **auth** section: Terraform service principal to use in the deployment.
+**Step 1.** Login with `az login`.
+
+**Step 2.** Create a copy of file `sample.params.json` with the name `params.json` and customize it with your own settings:
 - **firewall_ip**: Firewall IP used in the routes to forward traffic to.
 - **reference_vm_for_routes** section: Reference Virtual Machine used to collect the effective routes from on-premises.
 - **vnets** section: List of VNETs for which we want to create UDRs.
 
-**Step 2.** Run the script with the option to generate the configuration files first `create-udr.sh -g`. You can validate the generate files namely:
+**Step 3.** Run the script with the option to generate the configuration files first `create-udr.sh -g`. You can validate the generate files namely:
 - **vnets.auto.tfvars.json**: VNET configuration and rules.
 - **tmp_subscriptions.json**: List of subscriptions to consider.
 - **provider.tf**: Terraform script with the provider aliases for each subscription.
 - **main.tf**: Terraform script with a call to module *udr_creation* for each subscription.
 
-**Step 3.** Run the script with the option to deploy with Terraform `create-udr.sh -d`.
+**Step 4.** Run the script with the option to deploy with Terraform `create-udr.sh -d`.
