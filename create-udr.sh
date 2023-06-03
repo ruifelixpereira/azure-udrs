@@ -43,6 +43,10 @@ load_variables()
 
     # Firewall IP address to use in UDR routing rules
     export TF_VAR_firewall_ip=$(jq -r '.firewall_ip' $PARAMS_FILE)
+
+    # Debug Terraform
+    # Levels: TRACE, DEBUG, INFO, WARN or ERROR. 
+    export TF_LOG=DEBUG
 }
 
 generate_files()
