@@ -78,7 +78,7 @@ generate_files()
     echo "STEP (3/${numberOfSteps}) - Get effective routes."
     date
     az account set -s ${VAR_reference_vm_subscription_id}
-    #az network nic show-effective-route-table -g ${VAR_reference_vm_for_routes_resource_group} -n ${VAR_reference_vm_for_routes_nic_name} --output json > list_routes.json
+    az network nic show-effective-route-table -g ${VAR_reference_vm_for_routes_resource_group} -n ${VAR_reference_vm_for_routes_nic_name} --output json > list_routes.json
     GATEWAY_RULES_JSON=$(cat list_routes.json | jq  -r '.value | map(select(.nextHopType == "VirtualNetworkGateway")) | .[].addressPrefix[0]' | jq -Rcn '[inputs]')
 
 
