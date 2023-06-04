@@ -10,3 +10,6 @@ vnets.auto.tfvars.json
 old
 tests
 MYLOG.md
+
+provider.tf
+main.tf
