@@ -1,30 +1,29 @@
 #
-# UDR resources
+# Required provider
 #
 
-# List of subnets to associate the UDRs
-locals {
-  subnets = jsondecode(file("${path.module}/${var.list_subnets_json_file}"))
-
-  rules = {
-    for vn in local.subnets : vn.vnet => vn.subnets
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+    }
   }
 }
 
+#
+# UDR resources
+#
 
-# Resource group where we are going to create the new UDR
-data "azurerm_resource_group" "udr_resource_group" {
-    name = var.udr_resource_group
+# UDR to associate with subnets
+data "azurerm_route_table" "myudr" {
+  name                = var.udr_name
+  resource_group_name = var.udr_resource_group_name
 }
 
-
-resource "azurerm_route_table" "example" {
-  name                = "example-routetable"
-  location            = azurerm_resource_group.example.location
-  resource_group_name = azurerm_resource_group.example.name
-}
-
+# Associate UDR to subnets
 resource "azurerm_subnet_route_table_association" "example" {
-  subnet_id      = azurerm_subnet.example.id
-  route_table_id = azurerm_route_table.example.id
+  for_each = var.subnets
+
+  subnet_id      = each.value
+  route_table_id = data.azurerm_route_table.myudr.id
 }

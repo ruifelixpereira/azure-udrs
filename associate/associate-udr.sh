@@ -6,9 +6,9 @@
 show_help()
 {
    # Display Help
-   echo "Create UDRs to force VNETs traffic going thru a Firewall."
+   echo "Associate UDRs with VNET subnets."
    echo
-   echo "Syntax: create-udr [-d|f|g|h]"
+   echo "Syntax: associate-udr [-d|f|g|h]"
    echo "options:"
    echo "d     Deploy mode: only deploy with Terraform using pre-existing generated support files."
    echo "f     Full mode: generate support files and deploy with Terraform."
@@ -34,15 +34,7 @@ load_variables()
 
     # Load environment settings
     # <--- Customize file 'params.json' according to your environment --->
-    export PARAMS_FILE="params.json"
-
-    # Terraform service principal
-    #export TF_VAR_client_id=$(jq -r '.auth.client_id' $PARAMS_FILE)
-    #export TF_VAR_client_secret=$(jq -r '.auth.client_secret' $PARAMS_FILE)
-    #export TF_VAR_tenant_id=$(jq -r '.auth.tenant_id' $PARAMS_FILE)
-
-    # Firewall IP address to use in UDR routing rules
-    export TF_VAR_firewall_ip=$(jq -r '.firewall_ip' $PARAMS_FILE)
+    export PARAMS_FILE="../params.json"
 
     # Debug Terraform
     # Levels: TRACE, DEBUG, INFO, WARN or ERROR. 
@@ -52,12 +44,6 @@ load_variables()
 generate_files()
 {
     load_variables
-
-    # Reference VM to collect routes
-    export VAR_reference_vm_for_routes_resource_group=$(jq -r '.reference_vm_for_routes.resource_group' $PARAMS_FILE)
-    export VAR_reference_vm_for_routes_nic_name=$(jq -r '.reference_vm_for_routes.nic_name' $PARAMS_FILE)
-    export VAR_reference_vm_subscription_id=$(jq -r '.reference_vm_for_routes.subscription_id' $PARAMS_FILE)
-
 
     ########################################
     # Login
@@ -72,15 +58,6 @@ generate_files()
     echo "[" > $SUBSFILE
     MYSUBSSEP=""
     SUB_PROVIDER_ALIAS_COUNTER=0
-
-    ########################################
-    # Get effective routes from reference VM
-    echo "STEP (3/${numberOfSteps}) - Get effective routes."
-    date
-    az account set -s ${VAR_reference_vm_subscription_id}
-    az network nic show-effective-route-table -g ${VAR_reference_vm_for_routes_resource_group} -n ${VAR_reference_vm_for_routes_nic_name} --output json > list_routes.json
-    GATEWAY_RULES_JSON=$(cat list_routes.json | jq  -r '.value | map(select(.nextHopType == "VirtualNetworkGateway")) | .[].addressPrefix[0]' | jq -Rcn '[inputs]')
-
 
     ########################################
     # Process list of VNETs
@@ -109,29 +86,30 @@ generate_files()
         printf "%s" "$MYSUBSSEP {\"alias\":\"sub$SUB_PROVIDER_ALIAS_COUNTER\", \"subscription_id\":\"$VAR_vnet_subscription_id\"}" >> $SUBSFILE
         MYSUBSSEP=","
 
-        # Process VNET
-        arrSpaces="[]"
-        for row in $(echo $VAR_vnets_to_pair | jq -c '. | map(.) | .[]'); do
-            _jq() {
-                echo ${row} | jq -r "${1}"
-            }
-            MYVNET=$(_jq '.vnet')
-            MYVNETRG=$(_jq '.rg')
-            MYVNETSUBS=$(_jq '.subscription_id')
-
-            # Get Address space
-            az account set -s ${MYVNETSUBS}
-            vnetLocation=$(az network vnet show -g ${MYVNETRG} -n ${MYVNET} --query "location" --output tsv)
-            vnetSpaces=$(az network vnet show -g ${MYVNETRG} -n ${MYVNET} --query "addressSpace.addressPrefixes" --output json)
-            if [ $? -ne 0 ]; then
-                echo "Failed to get address space for ${MYVNETRG}/${MYVNET}"
-                exit 1
+        # Get VNET subnets
+        az account set -s ${VAR_vnet_subscription_id}
+        subnets=$(az network vnet subnet list -g ${VAR_vnet_rg} --vnet-name ${VNET} --query "[].name" --output tsv)
+        if [ $? -ne 0 ]; then
+            echo "Failed to get subnets list for ${VAR_vnet_rg}/${VNET}"
+            exit 1
+        fi
+    
+        # Get Subnet id
+        arrSubnets="[]"
+        for row in $subnets; do
+            # Filter GatewaySubnet and AzureBastionSubnet
+            if [ "$row" != "GatewaySubnet" ] && [ "$row" != "AzureBastionSubnet" ]; then
+                # Get subnet id
+                subnet_id=$(az network vnet subnet show -g $VAR_vnet_rg -n $row --vnet-name $VNET --query "id" --output json)
+                if [ $? -ne 0 ]; then
+                    echo "Failed to get subnets list for ${VAR_vnet_rg}/${VNET/${row}}"
+                    exit 1
+                fi
+                arrSubnets=$(jq --argjson arr1 "$arrSubnets" --argjson arr2 "[$subnet_id]" -n '$arr1 + $arr2')
             fi
-            arrSpaces=$(jq --argjson arr1 "$arrSpaces" --argjson arr2 "$vnetSpaces" -n '$arr1 + $arr2')
         done
      
-        MERGED_JSON=$(jq --argjson arr1 "$arrSpaces" --argjson arr2 "$GATEWAY_RULES_JSON" -n '$arr1 + $arr2 | unique')
-        printf "%s" "$MYSEP \"$VNET\": {\"rg\":\"$VAR_vnet_rg\", \"location\": \"$vnetLocation\", \"alias\":\"sub$SUB_PROVIDER_ALIAS_COUNTER\", \"rules\":$MERGED_JSON}" >> $VNETSFILE
+        printf "%s" "$MYSEP \"$VNET\": {\"rg\":\"$VAR_vnet_rg\", \"alias\":\"sub$SUB_PROVIDER_ALIAS_COUNTER\", \"subnets\":$arrSubnets}" >> $VNETSFILE
         MYSEP=","
     done
     echo "} }" >> $VNETSFILE
@@ -150,9 +128,8 @@ generate_files()
     for SUBSC in ${FLAT_SUBS_ARRAY}
     do
         SUB_ID=$(cat $SUBSFILE | jq --arg alias $SUBSC -r '. | map(select(.alias == $alias)) | .[0].subscription_id')
-        #printf "%b\n" "provider \"azurerm\" {\n  alias = \"$SUBSC\"\n  subscription_id = \"$SUB_ID\"\n  tenant_id = var.tenant_id\n  client_id = var.client_id\n  client_secret = var.client_secret\n  skip_provider_registration = true\n  features {}\n}" >> provider.tf
         printf "%b\n" "provider \"azurerm\" {\n  alias = \"$SUBSC\"\n  subscription_id = \"$SUB_ID\"\n  skip_provider_registration = true\n  features {}\n}" >> provider.tf
-        printf "%b\n" "module \"udr_creation_module_$SUBSC\" {\n  source = \"./modules/udr_creation\"\n  providers = {\n    azurerm = azurerm.$SUBSC\n  }\n  vnets = var.vnets\n  firewall_ip = var.firewall_ip\n  subscription_alias = [\"$SUBSC\"]\n  tags = var.tags\n}" >> main.tf
+        printf "%b\n" "module \"udr_association_module_$SUBSC\" {\n  for_each = {\n    for k, v in var.vnets : k => v\n    if contains([\"$SUBSC\"], v.alias)\n  }\n  source = \"../modules/udr_association\"\n  providers = {\n    azurerm = azurerm.$SUBSC\n  }\n  udr_name = \"udr-\${each.key}\"\n  udr_resource_group_name = each.value.rg\n  subnets = each.value.subnets\n}" >> main.tf
     done
 }
 
