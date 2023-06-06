@@ -8,7 +8,7 @@ These Terraform scripts are used to deploy UDRs to force the traffic to go throu
 - [ ] If needed, rollback (dissociate UDRs to all Vnet subnets and revert the changes made to the Hub UDR)
 
 
-## How to run it
+## How to run it - Preparation
 
 **Step 1.** Login with `az login`.
 
@@ -17,10 +17,23 @@ These Terraform scripts are used to deploy UDRs to force the traffic to go throu
 - **reference_vm_for_routes** section: Reference Virtual Machine used to collect the effective routes from on-premises.
 - **vnets** section: List of VNETs for which we want to create UDRs.
 
-**Step 3.** Run the script with the option to generate the configuration files first `create-udr.sh -g`. You can validate the generate files namely:
+
+## Create UDRs
+
+**Step 3a.** Change toi the `create` directory and run the script with the option to generate the configuration files first `create-udr.sh -g`. You can validate the generate files namely:
 - **vnets.auto.tfvars.json**: VNET configuration and rules.
 - **tmp_subscriptions.json**: List of subscriptions to consider.
 - **provider.tf**: Terraform script with the provider aliases for each subscription.
 - **main.tf**: Terraform script with a call to module *udr_creation* for each subscription.
 
-**Step 4.** Run the script with the option to deploy with Terraform `create-udr.sh -d`.
+**Step 4a.** Run the script with the option to deploy with Terraform `create-udr.sh -d`.
+
+## Associate UDRs
+
+**Step 3b.** Change toi the `associate` directory and run the script with the option to generate the configuration files first `associate-udr.sh -g`. You can validate the generate files namely:
+- **vnets.auto.tfvars.json**: VNET configuration and rules.
+- **tmp_subscriptions.json**: List of subscriptions to consider.
+- **provider.tf**: Terraform script with the provider aliases for each subscription.
+- **main.tf**: Terraform script with a call to module *udr_association* for each subscription.
+
+**Step 4b.** Run the script with the option to deploy with Terraform `associate-udr.sh -d`.
