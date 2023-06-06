@@ -8,7 +8,7 @@ These Terraform scripts are used to deploy UDRs to force the traffic to go throu
 - [ ] If needed, rollback (dissociate UDRs to all Vnet subnets and revert the changes made to the Hub UDR)
 
 
-## How to run it - Preparation
+## Preparation
 
 **Step 1.** Login with `az login`.
 
@@ -20,7 +20,7 @@ These Terraform scripts are used to deploy UDRs to force the traffic to go throu
 
 ## Create UDRs
 
-**Step 3a.** Change toi the `create` directory and run the script with the option to generate the configuration files first `create-udr.sh -g`. You can validate the generate files namely:
+**Step 3a.** Change to the `create` directory and run the script with the option to generate the configuration files first `create-udr.sh -g`. You can validate the generate files namely:
 - **vnets.auto.tfvars.json**: VNET configuration and rules.
 - **tmp_subscriptions.json**: List of subscriptions to consider.
 - **provider.tf**: Terraform script with the provider aliases for each subscription.
@@ -30,7 +30,7 @@ These Terraform scripts are used to deploy UDRs to force the traffic to go throu
 
 ## Associate UDRs
 
-**Step 3b.** Change toi the `associate` directory and run the script with the option to generate the configuration files first `associate-udr.sh -g`. You can validate the generate files namely:
+**Step 3b.** Change to the `associate` directory and run the script with the option to generate the configuration files first `associate-udr.sh -g`. You can validate the generate files namely:
 - **vnets.auto.tfvars.json**: VNET configuration and rules.
 - **tmp_subscriptions.json**: List of subscriptions to consider.
 - **provider.tf**: Terraform script with the provider aliases for each subscription.
